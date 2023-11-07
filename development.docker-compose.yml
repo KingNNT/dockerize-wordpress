@@ -1,0 +1,51 @@
+version: "3.9"
+
+networks:
+  network_app:
+    driver: bridge
+
+volumes:
+  mysql_volume:
+
+services:
+  app:
+    build:
+      context: ./.docker/development/wordpress
+      dockerfile: Dockerfile
+      args:
+        - UID_HOST_USER=${UID_HOST_USER}
+        - GID_HOST_USER=${GID_HOST_USER}
+    container_name: ${APP_NAME}_app
+    hostname: app
+    restart: unless-stopped
+    tty: true
+    networks:
+      - network_app
+    ports:
+      - "8080:80"
+    environment:
+      - WORDPRESS_DB_HOST=${WORDPRESS_DB_HOST}
+      - WORDPRESS_DB_USER=${WORDPRESS_DB_USER}
+      - WORDPRESS_DB_PASSWORD=${WORDPRESS_DB_PASSWORD}
+      - WORDPRESS_DB_NAME=${WORDPRESS_DB_NAME}
+      - WORDPRESS_TABLE_PREFIX=${WORDPRESS_TABLE_PREFIX}
+      - UID_HOST_USER=${UID_HOST_USER}
+      - GID_HOST_USER=${GID_HOST_USER}
+    volumes:
+      - ./wordpress:/var/www/html
+    depends_on:
+      - mysql
+
+  mysql:
+    container_name: ${APP_NAME}_mysql
+    hostname: mysql
+    restart: unless-stopped
+    build:
+      context: ./.docker/development/mysql
+      dockerfile: Dockerfile
+    networks:
+      - network_app
+    ports:
+      - '${PUBLIC_MYSQL_PORT:-3306}:3306'
+    volumes:
+      - mysql_volume:/var/lib/mysql

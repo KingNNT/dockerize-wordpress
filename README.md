@@ -1,0 +1,1 @@
+# Dockerize wordpress application
